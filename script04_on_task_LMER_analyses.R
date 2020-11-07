@@ -1,5 +1,5 @@
-library(lme4); library (ICC); library(psych); 
-library(car); library(tidyverse); library(lmerTest)
+library(lme4); library (ICC); library(psych); library(lmerTest)
+library(car); library(tidyverse); 
 
 # Multilevel models for LMER slopes versus FOOOF -------------------------------
 DATA3 <- read.csv("./data_EEG_COMB1v1.csv", 
@@ -124,6 +124,7 @@ Fron_mod_FOOOF <- lmer(slopes ~ 1+ block.c+diff.c+
 Anova(Fron_mod_FOOOF, type="III")
 summary(Fron_mod_FOOOF)
 
+AIC(Fron_mod_FOOOF)
 
 # Post hoc tests for LMER method for central channels --------------------------
 CENTRAL <- subset(DATA, region == "central")
@@ -157,6 +158,7 @@ Anova(Cent_mod_FOOOF, type="III")
 summary(Cent_mod_FOOOF)
 
 
+AIC(Cent_mod_FOOOF)
 
 # Post hoc tests for LMER method for parietal channels --------------------------
 PARIETAL <- subset(DATA, region == "parietal")
@@ -190,6 +192,7 @@ Par_mod_FOOOF <- lmer(slopes ~ 1+ block.c+diff.c+
 Anova(Par_mod_FOOOF, type="III")
 summary(Par_mod_FOOOF)
 
+AIC(Par_mod_FOOOF)
 
 # Post hoc tests for LMER method for occipital channels --------------------------
 OCCIPITAL <- subset(DATA, region == "occipital")
@@ -223,6 +226,7 @@ Occ_mod_FOOOF <- lmer(slopes ~ 1+ block.c+diff.c+
 Anova(Occ_mod_FOOOF, type="III")
 summary(Occ_mod_FOOOF)
 
+AIC(Occ_mod_FOOOF)
 
 
 # Figure 5 ---------------------------------------------------------------------

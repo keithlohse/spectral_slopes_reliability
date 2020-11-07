@@ -1,0 +1,185 @@
+# Load Libraries
+# Laod data
+import pandas as pd
+import numpy as np
+from fooof import FOOOF
+
+
+
+
+def load_data(subject, block):
+    # Load the EEG Files
+    fileLocation = 'C:/Grad_stats/DifficultyStudy/FinalTransposeddata/I%02d_pre_resting_Average B%d_transposed.csv' % (subject, block)
+    data = pd.read_csv(fileLocation)
+    return data, fileLocation
+
+"""fooof_helper functions are functions that aid in comparing PSD to FOOOF PSD."""
+def flatten_psd(tested_freqs, elec_psd):
+    """Flatten the power spectral density using the FOOOF algorithm.
+
+    Args:
+        tested_freqs: An array containing the frequencies of interest.
+        elec_psd: An array containing the original electrode power spectral density.
+
+    Returns:
+        results: A dictionary containing the flat spectrum, offset, slope, peak parameters, guassian parameters,
+         FOOOFED spectra, R2 and the error.
+    """
+    e = FOOOF()
+    # Add data to FOOOF object
+    freq_range = [2, 45]
+    e.add_data(tested_freqs, elec_psd, freq_range)
+    e.fit(tested_freqs, elec_psd, freq_range)
+
+    results = dict()
+    results['tested_Frequencies'] = tested_freqs
+    results['flat_Spectrum'] = e._peak_fit
+    results['Offset'] = e.background_params_[0]
+    results['Slope'] = e.background_params_[1]
+    results['PeakParams'] = e.peak_params_
+    results['GaussianParams'] = e._gaussian_params
+    results['Foofed'] = e.fooofed_spectrum_
+    results['R2'] = e.r_squared_
+    results['OError'] = e.error_
+
+    return results
+
+
+
+
+def generate_subject_specific_fooof(subjects, trials, list_events):
+    """A function that generates epochs of data used for CSP.
+
+    Args:
+        subject_range: A list to include start to end subjects.
+        trial_range: A list to include start to end trials.
+        events_dict: The desired events that do not include rest.
+        list_events: events_dict plus the rest event
+        rest_bounds: The time that is considered as rest for extracting an epoch. By default 0 to 1 seconds after event.
+        stim_bounds: The time that is considered as for stim. Ex and default: Intent = -1 to 0 seconds before movement.
+
+    Results:
+        flat_labels: An array of event labels.
+        fooof_results: An dictionary of data including flat spectrum, offset, slope, peak parameters, guassian parameters,
+         FOOOFED spectra, R2 and the error.
+    """
+
+    my_epochs = dict()
+    for subject in list(subjects):
+        subject_data = dict()
+        subject_name = 'S' + str(subject)
+        
+        for my_events in list_events:
+            all_events = None
+            for trial in list(trials):
+                events, raw = create_event_array_for_movement_onset(subject, trial)
+   http://localhost:8889/notebooks/Box/FOOOF%20scripts/Yoked.ipynb#             event_id = my_events
+                raw = filter_with_ica(raw, events, event_id, 3.0)  # 1.4
+                #raw.filter(low, high, fir_design='firwin')
+                picks = pick_types(raw.info, eeg=True)
+
+                stim_min, stim_max = stim_bounds  # define epochs around events (in s)
+                stim_epochs = mne.Epochs(raw, events, list_events[my_events], stim_min, stim_max, picks=picks, baseline=None,
+                                         preload=True)
+                if all_events is None:
+                    all_events = stim_epochs
+                else:
+                    all_events = mne.concatenate_epochs([all_events, stim_epochs])
+                        
+            #all_events = all_events[0]
+            subject_data[my_events] = all_events
+        my_epochs[subject_name] = subject_data
+
+    return my_epochs
+
+
+
+
+subjects = range(2,3)
+blocks = range(1,5)
+tested_freqs = range(0,128)
+areas = ['Frontal', 'Central', 'Parietal', 'Occipital']
+for subject in subjects:
+    for block in blocks:
+        for area in areas:
+            print(str(subject) + ' ' + str(block) + ' ' + area)
+
+
+
+
+ubjects = range(1,16)
+blocks = range(1,21)
+tested_freqs = range(1,26)
+my_range = range(1,26)
+areas = ['Frontal', 'Central', 'Parietal', 'Occipital']
+
+# some_data['S#']['B#']['area']['FOOOF_Stuff']
+
+bad_files = []
+output_results = dict()
+for subject in subjects:
+    subject_results = dict()
+    subject_name = 'S' + str(subject)
+    for block in blocks:
+        block_results = dict()
+        block_name = 'B' + str(block)
+        try:
+            current_data, fileLocation = load_data(subject, block)
+
+            for area in areas:
+                area_results = dict()
+                elec_psd = np.array(current_data[area])
+                my_results = flatten_psd(np.array(tested_freqs), elec_psd, my_range)
+                area_results = my_results
+                block_results[area] = area_results
+        except:
+            print('***************',fileLocation,'********************')
+            bad_files.append(fileLocation)
+            pass
+        subject_results[block_name] = block_results
+    output_results[subject_name] = subject_results
+
+
+
+
+
+subjects = range(1,31)
+blocks = range(1,21)
+tested_freqs = range(0,78)
+my_range = range(2,25)
+areas = ['Frontal', 'Central', 'Parietal', 'Occipital']
+
+# some_data['S#']['B#']['area']['FOOOF_Stuff']
+
+bad_files = []
+output_results = dict()
+for subject in subjects:
+    subject_results = dict()
+    subject_name = 'S' + str(subject)
+    for block in blocks:
+        block_results = dict()
+        block_name = 'B' + str(block)
+        current_data, fileLocation = load_data(subject, block)
+
+        for area in areas:
+            area_results = dict()
+            elec_psd = np.array(current_data[area])
+            my_results = flatten_psd(np.array(tested_freqs), elec_psd[0:78])
+            area_results = my_results
+            block_results[area] = area_results
+
+        subject_results[block_name] = block_results
+    output_results[subject_name] = subject_results
+
+
+
+
+
+
+output_results['S30']['B4']['Occipital']
+
+
+
+
+print(elec_psd[0:1])
+
