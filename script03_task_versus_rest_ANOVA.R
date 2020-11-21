@@ -2,13 +2,13 @@ library(car); library(ez); library(tidyverse)
 
 #### OVERALL MODEL -------------------------------------------------------------
 
-DATA2 <- read.csv("./data_fac_anova3.csv", 
+DATA2 <- read.csv("./data_fac_anova_25_11182020.csv", 
                   header = TRUE,na.strings=c("","NA","na"),
                   stringsAsFactors = TRUE)
 
 DATA2$subID <- factor(DATA2$subID)
 
-DATA2$time <- fct_recode(DATA2$time, Rest1 = "A", Task = "B", Rest2 = "C")
+DATA2$time <- fct_recode(DATA2$block, Rest1 = "A", Task = "B", Rest2 = "C")
 DATA2$time <- fct_relevel(DATA2$time, "Rest1", "Task", "Rest2")
 
 DATA2$method <- fct_recode(DATA2$method, FOOOF = "fooof", LMER = "lmer")

@@ -69,18 +69,30 @@ ggplot(data = DATA_AVE[DATA_AVE$block=="pretest",],
 
 
 # FIGURE 1B: Spectral Slope
-ggplot(data = DATA_AVE[DATA_AVE$block=="pretest",], 
+# Switchin to Log Base 10 to match FOOOF Figures
+head(DATA_AVE)
+FIG1B <- DATA_AVE
+FIG1B$lgHz <- log(FIG1B$Hz, 10)
+FIG1B$ave_lg_central <- log(FIG1B$ave_central, 10)
+FIG1B <- subset(FIG1B, block=="pretest")
+FIG1B_no_alpha <- subset(FIG1B, Hz<8 | Hz>=13)
+summary(lm(ave_lg_central~lgHz, data=FIG1B_no_alpha))
+
+ggplot(data = FIG1B, 
        mapping = aes(x = lgHz, y = ave_lg_central)) +
-  scale_x_continuous(name = "Log Frequency (ln(Hz))") +
-  scale_y_continuous(name = "Log Mean Central Power (ln(uV^2))",
-                     limits=c(-2,2))+
+  scale_x_continuous(name = "Log Frequency (log(Hz))") +
+  scale_y_continuous(name = "Log Mean Central Power (log(uV^2))",
+                     breaks=c(-0.6,-0.4,-0.2, 0.0, 0.2, 0.4, 0.6, 0.8))+
+  annotate("rect", xmin=log(8,10), xmax=log(13, 10), ymin=-0.6, ymax=0.7, 
+           alpha=0.2, fill="grey", col="black")+
   geom_line(col="black", lwd=1) +
-  stat_smooth(col="red", method="lm", se=FALSE, lty=2)+
+  stat_smooth(data=FIG1B_no_alpha, method="lm", col="red", lty=2, se=FALSE)+
   theme_classic()+
-  theme(axis.text=element_text(size=16, colour="black"), 
-        strip.text=element_text(size=16, colour="black"), 
-        axis.title=element_text(size=16,face="bold"),
+  theme(axis.text=element_text(size=14, colour="black"), 
+        strip.text=element_text(size=14, colour="black"), 
+        axis.title=element_text(size=14,face="bold"),
         legend.position = "bottom")
+
 
 # FIGURE 1C: Aperiodic Slope
 ggplot(data = DATA_AVE[DATA_AVE$block=="pretest",], 
@@ -88,7 +100,7 @@ ggplot(data = DATA_AVE[DATA_AVE$block=="pretest",],
   scale_x_continuous(name = "Frequency (Hz)") +
   scale_y_continuous(name = "Log Mean Central Power (ln(uV^2))",
                      limits=c(-2,2))+
-  geom_line(col="black", lwd=1) +
+    geom_line(col="black", lwd=1) +
   #stat_smooth(col="red", method="lm", se=FALSE, lty=2)+
   theme_classic()+
   theme(axis.text=element_text(size=16, colour="black"), 
@@ -125,7 +137,7 @@ ggplot(data = DATA_AVE,
         axis.title=element_text(size=16,face="bold"),
         legend.text=element_text(size=16, color="black"),
         legend.title=element_text(size=16, face="bold"),
-        legend.position = c(0.7,0.7),
+        legend.position = c(0.8,0.8),
         legend.background = element_rect(fill="grey90",
                                          size=0.5, linetype="solid", 
                                          colour ="black"))
@@ -134,87 +146,51 @@ ggplot(data = DATA_AVE,
 
 
 
-#### Generating lmer slopes and intercepts ----------------------------------
+#### Generating lm slopes and intercepts ----------------------------------
+# Generating R^2 and coefficients for each participant to assess model Fit
+# We will create an empty data frame to store our output in...
 head(FILTERED)
 
+FILTERED$Factor <- factor(paste(FILTERED$subID, FILTERED$time, FILTERED$block, sep="_"))
+FILTERED$Factor <- factor(FILTERED$Factor)
+head(FILTERED)
+FILTERED <- subset(FILTERED, subID != "a25") # Removing missing participant
 
-## generating slopes for frontal channel
-m1<-lmer(lgFrontal~
-           # Fixed-effects
-           1+lgHz+
-           # Random-effects
-           (1+lgHz|subID:block), data=FILTERED, REML=FALSE)
+LIST <- as.vector(unique(FILTERED$Factor))
 
-Anova(m1, type="III")
-summary(m1)
-ranef(m1)
-fixef(m1)
-coef(m1)
+index<-c(1:length(LIST))
+DAT2<-data.frame(index) 
+head(DAT2)
 
+for (i in 1:length(LIST)) {
+  SAMP <- FILTERED[FILTERED$Factor==LIST[i],]
+  
+  DAT2$cluster[i]<-LIST[i]
+  DAT2$subID[i] <- as.vector(SAMP$subID[i])
+  DAT2$time[i] <- as.vector(SAMP$time[i])
+  DAT2$block[i] <- as.vector(SAMP$block[i])
+  # Frontal
+  DAT2$frontal_intercept[i]<-lm(lgFrontal~lgHz, data=SAMP)$coefficients[1]
+  DAT2$frontal_slope[i]<-lm(lgFrontal~lgHz, data=SAMP)$coefficients[2]
+  DAT2$frontal_rsquared[i]<-summary(lm(lgFrontal~lgHz, data=SAMP))$adj.r.squared
+  
+  # Central
+  DAT2$central_intercept[i]<-lm(lgCentral~lgHz, data=SAMP)$coefficients[1]
+  DAT2$central_slope[i]<-lm(lgCentral~lgHz, data=SAMP)$coefficients[2]
+  DAT2$central_rsquared[i]<-summary(lm(lgCentral~lgHz, data=SAMP))$adj.r.squared
+  
+  # Frontal
+  DAT2$parietal_intercept[i]<-lm(lgParietal~lgHz, data=SAMP)$coefficients[1]
+  DAT2$parietal_slope[i]<-lm(lgParietal~lgHz, data=SAMP)$coefficients[2]
+  DAT2$parietal_rsquared[i]<-summary(lm(lgParietal~lgHz, data=SAMP))$adj.r.squared
+  
+  # Frontal
+  DAT2$occipital_intercept[i]<-lm(lgOccipital~lgHz, data=SAMP)$coefficients[1]
+  DAT2$occipital_slope[i]<-lm(lgOccipital~lgHz, data=SAMP)$coefficients[2]
+  DAT2$occipital_rsquared[i]<-summary(lm(lgOccipital~lgHz, data=SAMP))$adj.r.squared
+  
+  print(LIST[i])
+}
 
-dat<-data.frame(coef(m1)$'subID:block')
-dat
-write.csv(dat, "./data_EEG_initial_slopes_Frontal.csv")
-
-
-
-## generating slopes for central channel
-m1<-lmer(lgCentral~
-           # Fixed-effects
-           1+lgHz+
-           # Random-effects
-           (1+lgHz|subID:block), data=FILTERED, REML=FALSE)
-
-Anova(m1, type="III")
-summary(m1)
-ranef(m1)
-fixef(m1)
-coef(m1)
-
-
-
-dat<-data.frame(coef(m1)$'subID:block')
-dat
-write.csv(dat, "./data_EEG_initial_slopes_Central.csv")
-
-
-
-
-
-## generating slopes for parietal channel
-m1<-lmer(lgParietal~
-           # Fixed-effects
-           1+lgHz+
-           # Random-effects
-           (1+lgHz|subID:block), data=FILTERED, REML=FALSE)
-
-Anova(m1, type="III")
-summary(m1)
-ranef(m1)
-fixef(m1)
-coef(m1)
-
-dat<-data.frame(coef(m1)$'subID:block')
-dat
-write.csv(dat, "./data_EEG_initial_slopes_Parietal.csv")
-
-
-
-
-## generating slopes for occipital channel
-m1<-lmer(lgOccipital~
-           # Fixed-effects
-           1+lgHz+
-           # Random-effects
-           (1+lgHz|subID:block), data=FILTERED, REML=FALSE)
-
-Anova(m1, type="III")
-summary(m1)
-ranef(m1)
-fixef(m1)
-coef(m1)
-
-dat<-data.frame(coef(m1)$'subID:block')
-dat
-write.csv(dat, "./data_EEG_initial_slopes_Occipital.csv")
-
+head(DAT2)
+write.csv(DAT2, "./data_LMER_params.csv")

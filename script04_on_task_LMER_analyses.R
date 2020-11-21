@@ -2,7 +2,7 @@ library(lme4); library (ICC); library(psych); library(lmerTest)
 library(car); library(tidyverse); 
 
 # Multilevel models for LMER slopes versus FOOOF -------------------------------
-DATA3 <- read.csv("./data_EEG_COMB1v1.csv", 
+DATA3 <- read.csv("./data_EEG_COMB25_11182020.csv", 
                   header = TRUE,na.strings=c("","NA","na"),
                   stringsAsFactors = TRUE)
 head(DATA3)
@@ -108,23 +108,6 @@ Anova(Fron_mod, type="III")
 summary(Fron_mod)
 
 
-Fron_mod_LMER <- lmer(slopes ~ 1+ block.c+diff.c+
-                   (1+block.c+diff.c|subID), 
-                 data = FRONTAL[FRONTAL$method=="LMER",], REML = FALSE,
-                 control=lmerControl(optimizer="bobyqa",
-                                     optCtrl=list(maxfun=5e5)))
-Anova(Fron_mod_LMER, type="III")
-summary(Fron_mod_LMER)
-
-Fron_mod_FOOOF <- lmer(slopes ~ 1+ block.c+diff.c+
-                        (1+block.c+diff.c|subID), 
-                      data = FRONTAL[FRONTAL$method=="FOOOF",], REML = FALSE,
-                      control=lmerControl(optimizer="bobyqa",
-                                          optCtrl=list(maxfun=5e5)))
-Anova(Fron_mod_FOOOF, type="III")
-summary(Fron_mod_FOOOF)
-
-AIC(Fron_mod_FOOOF)
 
 # Post hoc tests for LMER method for central channels --------------------------
 CENTRAL <- subset(DATA, region == "central")
@@ -139,26 +122,6 @@ Cent_mod <- lmer(slopes ~ 1+ block.c*method+diff.c*method+
 Anova(Cent_mod, type="III")
 summary(Cent_mod)
 
-
-Cent_mod_LMER <- lmer(slopes ~ 1+ block.c+diff.c+
-                        (1+block.c+diff.c|subID), 
-                      data = CENTRAL[CENTRAL$method=="LMER",], REML = FALSE,
-                      control=lmerControl(optimizer="bobyqa",
-                                          optCtrl=list(maxfun=5e5)))
-Anova(Cent_mod_LMER, type="III")
-summary(Cent_mod_LMER)
-
-
-Cent_mod_FOOOF <- lmer(slopes ~ 1+ block.c+diff.c+
-                        (1+block.c+diff.c|subID), 
-                      data = CENTRAL[CENTRAL$method=="FOOOF",], REML = FALSE,
-                      control=lmerControl(optimizer="bobyqa",
-                                          optCtrl=list(maxfun=5e5)))
-Anova(Cent_mod_FOOOF, type="III")
-summary(Cent_mod_FOOOF)
-
-
-AIC(Cent_mod_FOOOF)
 
 # Post hoc tests for LMER method for parietal channels --------------------------
 PARIETAL <- subset(DATA, region == "parietal")
@@ -175,24 +138,6 @@ summary(Par_mod)
 
 
 
-Par_mod_LMER <- lmer(slopes ~ 1+ block.c+diff.c+
-                        (1+block.c+diff.c|subID), 
-                      data = PARIETAL[PARIETAL$method=="LMER",], REML = FALSE,
-                      control=lmerControl(optimizer="bobyqa",
-                                          optCtrl=list(maxfun=5e5)))
-Anova(Par_mod_LMER, type="III")
-summary(Par_mod_LMER)
-
-
-Par_mod_FOOOF <- lmer(slopes ~ 1+ block.c+diff.c+
-                       (1+block.c+diff.c|subID), 
-                     data = PARIETAL[PARIETAL$method=="FOOOF",], REML = FALSE,
-                     control=lmerControl(optimizer="bobyqa",
-                                         optCtrl=list(maxfun=5e5)))
-Anova(Par_mod_FOOOF, type="III")
-summary(Par_mod_FOOOF)
-
-AIC(Par_mod_FOOOF)
 
 # Post hoc tests for LMER method for occipital channels --------------------------
 OCCIPITAL <- subset(DATA, region == "occipital")
@@ -207,26 +152,6 @@ Occ_mod <- lmer(slopes ~ 1+ block.c*method+diff.c*method+
 Anova(Occ_mod, type="III")
 summary(Occ_mod)
 
-
-
-Occ_mod_LMER <- lmer(slopes ~ 1+ block.c+diff.c+
-                       (1+block.c+diff.c|subID), 
-                     data = OCCIPITAL[OCCIPITAL$method=="LMER",], REML = FALSE,
-                     control=lmerControl(optimizer="bobyqa",
-                                         optCtrl=list(maxfun=5e5)))
-Anova(Occ_mod_LMER, type="III")
-summary(Occ_mod_LMER)
-
-
-Occ_mod_FOOOF <- lmer(slopes ~ 1+ block.c+diff.c+
-                       (1+block.c+diff.c|subID), 
-                     data = OCCIPITAL[OCCIPITAL$method=="FOOOF",], REML = FALSE,
-                     control=lmerControl(optimizer="bobyqa",
-                                         optCtrl=list(maxfun=5e5)))
-Anova(Occ_mod_FOOOF, type="III")
-summary(Occ_mod_FOOOF)
-
-AIC(Occ_mod_FOOOF)
 
 
 # Figure 5 ---------------------------------------------------------------------
@@ -357,7 +282,7 @@ ICC(DAT7[DAT7$region=="Occipital", c("FOOOF", "LMER")], missing=TRUE,alpha=.05,l
 
 
 # ICCs between FOOOF and LMER for Resting data ----
-DAT8 <- read.csv("./data_EEG_COMB1v1.csv", 
+DAT8 <- read.csv("./data_EEG_COMB25_11182020.csv", 
                   header = TRUE, na.strings=c("","NA","na"),
                  stringsAsFactors = TRUE)
 head(DAT8)

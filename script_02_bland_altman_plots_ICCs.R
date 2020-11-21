@@ -3,7 +3,7 @@ library("ggplot2"); library("blandr"); library("ggpubr"); library("patchwork");
 library ("ICC"); library("psych");
 
 #### IIC correlations Frontal intercepts/ offset --------------------------------------
-DATA1 <- read.csv("./data_EEG_COMB1v1.csv", 
+DATA1 <- read.csv("./data_EEG_COMB25_11182020.csv", 
                   header = TRUE,na.strings=c("","NA","na"))
 
 colnames(DATA1)
