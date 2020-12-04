@@ -29,6 +29,7 @@ head(PRE)
 
 # Passes data to the blandr.statistics function to generate Bland-Altman statistics
 statistics.results <- blandr.statistics(PRE$lgHz_central, POST$lgHz_central)
+statistics.results$upperLOA-(statistics.results$bias)
 
 # Generates a ggplot, with title changed
 g1 <- blandr.plot.ggplot( statistics.results , plotTitle = "Pre and Post-test Spectral slope: Central Region" ,
@@ -51,6 +52,7 @@ print(g2)
 ### FOOOF slopes  frontal channel --------------------------------
 # Passes data to the blandr.statistics function to generate Bland-Altman statistics
 statistics.results <- blandr.statistics(PRE$slope_central, POST$slope_central)
+statistics.results$upperLOA-(statistics.results$bias)
 
 
 # Generates a ggplot, with title changed
